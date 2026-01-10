@@ -1,3 +1,5 @@
+# mypy: disable-error-code=valid-type
+
 """The sqlalchemy models for the tables in the database."""
 
 import sqlalchemy
