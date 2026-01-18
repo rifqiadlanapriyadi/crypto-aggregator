@@ -17,3 +17,7 @@ class CryptoPrice(database.Base):  # pylint: disable=too-few-public-methods
     price = sqlalchemy.Column(sqlalchemy.Numeric, nullable=False)
     source = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     fetched_at = sqlalchemy.Column(sqlalchemy.DateTime(timezone=True), nullable=False)
+
+    __table_args__ = (
+        sqlalchemy.UniqueConstraint("asset", "quote", "source", name="uq_asset_quote_source"),
+    )
