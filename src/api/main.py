@@ -17,9 +17,7 @@ def get_crypto_price(
     """Get the price data of a given asset."""
     asset_upper = asset.upper()
     crypto_price = (
-        db.query(models.CryptoPrice)
-        .filter(models.CryptoPrice.asset == asset_upper)
-        .first()
+        db.query(models.CryptoPrice).filter(models.CryptoPrice.asset == asset_upper).first()
     )
     if not crypto_price:
         raise fastapi.HTTPException(
