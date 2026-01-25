@@ -30,6 +30,24 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    env_file:
+      - .env
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # UI
+
+  worker:
+    build: .
+    command: celery -A worker.celery_app worker -Q price_ingestion --loglevel=info
+    depends_on:
+      - rabbitmq
+      - db
+
 
 volumes:
   postgres_data:

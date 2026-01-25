@@ -16,6 +16,7 @@ class Settings(pydantic_settings.BaseSettings):
 
     environment: str
     database_url: str
+    rabbitmq_url: str
 
 
 settings = Settings()  # type: ignore[call-arg]
