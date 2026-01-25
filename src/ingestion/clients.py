@@ -110,9 +110,10 @@ class CoinbaseClient(CryptoClient):
     @staticmethod
     def _get_price(asset: str) -> schemas.BaseCryptoPrice:
         url = "https://api.coinbase.com/v2/prices/{}-USD/spot"
-        if asset not in COINBASE_COIN_IDS:
+        asset_lower = asset.lower()
+        if asset_lower not in COINBASE_COIN_IDS:
             raise ValueError(f"{asset} is not a valid or accepted asset for Coinbase.")
-        asset_id = COINBASE_COIN_IDS[asset]
+        asset_id = COINBASE_COIN_IDS[asset_lower]
         url = url.format(asset_id)
         response = requests.get(url, timeout=10)
         response_contents = response.json()
