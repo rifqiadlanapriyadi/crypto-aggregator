@@ -11,3 +11,11 @@ app = celery.Celery(
 )
 
 app.autodiscover_tasks(["worker"])  # File name needs to be tasks.py
+
+app.conf.beat_schedule = {
+    "ingest-crypto-prices": {
+        "task": "worker.tasks.ingest_prices_task",
+        "schedule": 60.0,
+        "args": (["BTC", "ETH"],),
+    },
+}

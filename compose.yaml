@@ -48,6 +48,12 @@ services:
       - rabbitmq
       - db
 
+  scheduler:
+    build: .
+    command: celery -A worker.celery_app beat --loglevel=info --schedule /tmp/celerybeat-schedule
+    depends_on:
+      - rabbitmq
+
 
 volumes:
   postgres_data:
