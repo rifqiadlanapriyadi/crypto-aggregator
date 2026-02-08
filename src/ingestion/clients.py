@@ -41,11 +41,12 @@ def _map_assets(assets: Iterable[str], id_mapping: Mapping[str, str]) -> AssetMa
     asset_ids = []
     invalid_assets = []
     for asset in assets:
-        asset_id = id_mapping[asset.lower()]
+        asset_id = id_mapping.get(asset.lower())
         if not asset_id:
             invalid_assets.append(asset)
-        asset_ids.append(asset_id)
-        reverse_mapping[asset_id] = asset.lower()
+        else:
+            asset_ids.append(asset_id)
+            reverse_mapping[asset_id] = asset.lower()
 
     return AssetMapping(
         reverse_mapping=reverse_mapping,
@@ -76,7 +77,7 @@ class CoinGeckoClient(CryptoClient):
         asset_mapping = _map_assets(assets, COINGECKO_COIN_IDS)
         if asset_mapping.invalid_assets:
             raise ValueError(
-                f"Invalid assets for CoinGecko: f{', '.join(asset_mapping.invalid_assets)}."
+                f"Invalid assets for CoinGecko: {', '.join(asset_mapping.invalid_assets)}."
             )
 
         params = {"ids": ",".join(asset_mapping.asset_ids), "vs_currencies": "usd"}
@@ -126,7 +127,16 @@ class CoinbaseClient(CryptoClient):
         )
 
     def get_prices(self, assets: Iterable[str]) -> List[schemas.BaseCryptoPrice]:  # noqa: D102
-        return [self._get_price(asset) for asset in assets]
+        results = []
+        error_assets = []
+        for asset in assets:
+            try:
+                results.append(self._get_price(asset))
+            except ValueError:
+                error_assets.append(asset)
+        if error_assets:
+            raise ValueError(f"Invalid assets for Coinbase: {', '.join(error_assets)}.")
+        return results
 
 
 class BinanceClient(CryptoClient):
@@ -140,7 +150,7 @@ class BinanceClient(CryptoClient):
         asset_mapping = _map_assets(assets, BINANCE_COIN_IDS)
         if asset_mapping.invalid_assets:
             raise ValueError(
-                f"Invalid assets for Binance: f{', '.join(asset_mapping.invalid_assets)}."
+                f"Invalid assets for Binance: {', '.join(asset_mapping.invalid_assets)}."
             )
 
         dt = datetime.datetime.now(datetime.timezone.utc)
