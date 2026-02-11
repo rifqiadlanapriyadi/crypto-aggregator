@@ -12,6 +12,7 @@ from fastapi import testclient
 from sqlalchemy import orm
 
 from api import database, main, models
+from cache import redis
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 
@@ -70,6 +71,15 @@ def setup(client: testclient.TestClient, tdb: orm.Session) -> None:
         )
     )
     tdb.commit()
+
+
+@pytest.fixture(autouse=True)
+def _mock_redis(mocker):
+    mock_redis = mocker.MagicMock()
+    mock_redis.get.return_value = None
+    main.app.dependency_overrides[redis.get_redis_client] = lambda: mock_redis
+    yield mock_redis
+    main.app.dependency_overrides.clear()
 
 
 class TestAPI:

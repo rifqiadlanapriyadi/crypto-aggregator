@@ -14,3 +14,5 @@ class BaseCryptoPrice(pydantic.BaseModel):
     price: decimal.Decimal
     source: str
     fetched_at: datetime.datetime
+
+    model_config = pydantic.ConfigDict(from_attributes=True)
