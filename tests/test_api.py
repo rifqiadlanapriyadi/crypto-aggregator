@@ -99,6 +99,30 @@ class TestAPI:
             },
         ]
 
+    def test_get_crypto_price_case_insensitivity(
+        self, client: testclient.TestClient, tdb: orm.Session, setup
+    ) -> None:
+        """Test a successful get of a crypto prices with upper and lower-case letters."""
+        response = client.get("/prices/FbR")
+        data = response.json()
+        assert response.status_code == 200
+        assert data == [
+            {
+                "asset": "FBR",
+                "quote": "USD",
+                "price": "123.123",
+                "source": "barbaz_source",
+                "fetched_at": "2026-01-01T12:00:00",
+            },
+            {
+                "asset": "FBR",
+                "quote": "USD",
+                "price": "123.456",
+                "source": "foobar_source",
+                "fetched_at": "2026-01-01T12:00:00",
+            },
+        ]
+
     def test_get_crypto_price_fail(
         self, client: testclient.TestClient, tdb: orm.Session, setup
     ) -> None:
