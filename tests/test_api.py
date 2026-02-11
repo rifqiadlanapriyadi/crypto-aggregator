@@ -63,7 +63,7 @@ def setup(client: testclient.TestClient, tdb: orm.Session) -> None:
     tdb.add(
         models.CryptoPrice(
             asset="FBR",
-            quote="USD",
+            quote="EUR",
             price=123.456,
             source="foobar_source",
             fetched_at=datetime.datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
@@ -80,9 +80,8 @@ class TestAPI:
     ) -> None:
         """Test a successful get of a crypto prices."""
         response = client.get("/prices/fbr")
-        data = response.json()
-        assert response.status_code == 200
-        assert data == [
+        actual = response.json()
+        expected = [
             {
                 "asset": "FBR",
                 "quote": "USD",
@@ -92,36 +91,15 @@ class TestAPI:
             },
             {
                 "asset": "FBR",
-                "quote": "USD",
+                "quote": "EUR",
                 "price": "123.456",
                 "source": "foobar_source",
                 "fetched_at": "2026-01-01T12:00:00",
             },
         ]
 
-    def test_get_crypto_price_case_insensitivity(
-        self, client: testclient.TestClient, tdb: orm.Session, setup
-    ) -> None:
-        """Test a successful get of a crypto prices with upper and lower-case letters."""
-        response = client.get("/prices/FbR")
-        data = response.json()
         assert response.status_code == 200
-        assert data == [
-            {
-                "asset": "FBR",
-                "quote": "USD",
-                "price": "123.123",
-                "source": "barbaz_source",
-                "fetched_at": "2026-01-01T12:00:00",
-            },
-            {
-                "asset": "FBR",
-                "quote": "USD",
-                "price": "123.456",
-                "source": "foobar_source",
-                "fetched_at": "2026-01-01T12:00:00",
-            },
-        ]
+        assert all(item in actual for item in expected)
 
     def test_get_crypto_price_fail(
         self, client: testclient.TestClient, tdb: orm.Session, setup
@@ -130,4 +108,117 @@ class TestAPI:
         response = client.get("/prices/asd")
         data = response.json()
         assert response.status_code == 404
-        assert data["detail"] == "Crypto asset asd not found."
+        assert data["detail"] == "Crypto asset asd with the given parameters not found."
+
+    def test_get_crypto_price_case_insensitivity(
+        self, client: testclient.TestClient, tdb: orm.Session, setup
+    ) -> None:
+        """Test a successful get of a crypto prices with upper and lower-case letters."""
+        response = client.get("/prices/FbR")
+        actual = response.json()
+        expected = [
+            {
+                "asset": "FBR",
+                "quote": "USD",
+                "price": "123.123",
+                "source": "barbaz_source",
+                "fetched_at": "2026-01-01T12:00:00",
+            },
+            {
+                "asset": "FBR",
+                "quote": "EUR",
+                "price": "123.456",
+                "source": "foobar_source",
+                "fetched_at": "2026-01-01T12:00:00",
+            },
+        ]
+
+        assert response.status_code == 200
+        assert all(item in actual for item in expected)
+
+    def test_get_crypto_price_source_filter(
+        self, client: testclient.TestClient, tdb: orm.Session, setup
+    ) -> None:
+        """Test that the source filter works."""
+        response = client.get("/prices/fbr?source=barbaz_source")
+        actual = response.json()
+        assert response.status_code == 200
+        assert actual == [
+            {
+                "asset": "FBR",
+                "quote": "USD",
+                "price": "123.123",
+                "source": "barbaz_source",
+                "fetched_at": "2026-01-01T12:00:00",
+            },
+        ]
+
+    def test_get_crypto_price_source_filter_fail(
+        self, client: testclient.TestClient, tdb: orm.Session, setup
+    ) -> None:
+        """Test that the source filter works and fails when nothing is returned."""
+        response = client.get("/prices/fbr?source=fee_fi_fo_fum")
+        data = response.json()
+        assert response.status_code == 404
+        assert data["detail"] == "Crypto asset fbr with the given parameters not found."
+
+    def test_get_crypto_price_quote_filter(
+        self, client: testclient.TestClient, tdb: orm.Session, setup
+    ) -> None:
+        """Test that the quote filter works."""
+        response = client.get("/prices/fbr?quote=EUR")
+        actual = response.json()
+        assert response.status_code == 200
+        assert actual == [
+            {
+                "asset": "FBR",
+                "quote": "EUR",
+                "price": "123.456",
+                "source": "foobar_source",
+                "fetched_at": "2026-01-01T12:00:00",
+            },
+        ]
+
+    def test_get_crypto_price_quote_filter_fail(
+        self, client: testclient.TestClient, tdb: orm.Session, setup
+    ) -> None:
+        """Test that the quote filter works and fails when nothing is returned."""
+        response = client.get("/prices/fbr?quote=LMA")
+        data = response.json()
+        assert response.status_code == 404
+        assert data["detail"] == "Crypto asset fbr with the given parameters not found."
+
+    def test_get_crypto_price_offset_limit(
+        self, client: testclient.TestClient, tdb: orm.Session, setup
+    ) -> None:
+        """Test that the offset and limit parameters work."""
+        response = client.get("/prices/fbr?offset=1&limit=1")
+        actual = response.json()
+        expected = [
+            {
+                "asset": "FBR",
+                "quote": "USD",
+                "price": "123.123",
+                "source": "barbaz_source",
+                "fetched_at": "2026-01-01T12:00:00",
+            },
+            {
+                "asset": "FBR",
+                "quote": "EUR",
+                "price": "123.456",
+                "source": "foobar_source",
+                "fetched_at": "2026-01-01T12:00:00",
+            },
+        ]
+        assert response.status_code == 200
+        assert len(actual) == 1
+        assert actual[0] in expected
+
+    def test_get_crypto_price_offset_limit_fail(
+        self, client: testclient.TestClient, tdb: orm.Session, setup
+    ) -> None:
+        """Test that the offset and limit parameters work and fails when nothing is returned."""
+        response = client.get("/prices/fbr?offset=2&limit=1")
+        data = response.json()
+        assert response.status_code == 404
+        assert data["detail"] == "Crypto asset fbr with the given parameters not found."
