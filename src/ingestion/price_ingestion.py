@@ -6,6 +6,7 @@ from typing import Iterable, List
 from sqlalchemy.dialects import postgresql
 
 from api import database, models, schemas
+from cache import redis
 from ingestion import clients
 
 CLIENTS_TO_CALL: Iterable[clients.CryptoClient] = {
@@ -58,6 +59,11 @@ def ingest_prices(assets: Iterable[str]) -> None:
     db.execute(stmt)
     db.commit()
     logging.info("Changes pushed to the database.")
+
+    logging.info("Invalidating Redis caches for %s", assets)
+    cache = redis.get_redis_client()
+    for asset in assets:
+        cache.delete(f"prices:{asset.upper()}")
 
 
 if __name__ == "__main__":

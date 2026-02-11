@@ -115,6 +115,7 @@ def test_ingestion(client: testclient.TestClient, tdb: orm.Session, setup, mocke
         "ingestion.clients.BinanceClient.get_prices", _mock_get_prices_factory(BINANCE_MOCK_RESULTS)
     )
     mocker.patch("api.database.get_db", _override_get_db)
+    mocker.patch("cache.redis.get_redis_client", mocker.MagicMock())
 
     expected = [
         {
