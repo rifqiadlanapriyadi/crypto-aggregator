@@ -1,6 +1,7 @@
 """The main configuration of the crypto_aggregator API."""
 
 import json
+import logging
 from typing import List, Optional
 
 import fastapi
@@ -10,6 +11,8 @@ from sqlalchemy import orm
 
 from api import database, models, schemas
 from cache import redis as redis_cache
+
+logger = logging.getLogger("uvicorn")
 
 CACHE_TTL = 30
 
@@ -33,8 +36,10 @@ def get_crypto_prices(  # pylint: disable=too-many-arguments,too-many-positional
     cached = cache.get(cache_key)
 
     if cached:
+        logger.info("%s: Hit cache key %s. Returning from cache.", asset_upper, cache_key)
         rows = json.loads(cached)  # type: ignore[arg-type]
     else:
+        logger.info("%s: Missed cache key %s. Reading from the database.", asset_upper, cache_key)
         query = db.query(models.CryptoPrice).filter(models.CryptoPrice.asset == asset_upper)
         rows = [schemas.BaseCryptoPrice.model_validate(row).model_dump() for row in query.all()]
         encoded = encoders.jsonable_encoder(rows)
