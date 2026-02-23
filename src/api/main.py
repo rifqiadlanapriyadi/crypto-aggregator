@@ -1,5 +1,6 @@
 """The main configuration of the crypto_aggregator API."""
 
+import contextlib
 import json
 import logging
 from typing import List, Optional
@@ -9,14 +10,22 @@ import redis
 from fastapi import encoders, status
 from sqlalchemy import orm
 
-from api import database, models, schemas
+from api import database, db_migrations, models, schemas
 from cache import redis as redis_cache
 
 logger = logging.getLogger("uvicorn")
 
 CACHE_TTL = 30
 
-app = fastapi.FastAPI()
+
+@contextlib.asynccontextmanager
+async def lifespan(_: fastapi.FastAPI):
+    """Define the lifespan of the app and define startup and shutdown commands."""
+    db_migrations.run_migrations()
+    yield
+
+
+app = fastapi.FastAPI(lifespan=lifespan)
 
 
 @app.get("/prices/{asset}", response_model=List[schemas.BaseCryptoPrice])
