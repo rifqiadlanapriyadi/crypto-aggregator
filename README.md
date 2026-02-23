@@ -12,6 +12,8 @@ Currently fetching:
 * [Binance](https://www.binance.com)
 * [Coinbase](https://www.coinbase.com)
 
+Available at: https://api-production-0d3bf.up.railway.app/docs
+
 ## Features
 * Distributed ingestion pipeline using RabbitMQ
 * Ingestion task scheduling with Celery
