@@ -87,6 +87,8 @@ RABBITMQ_USER=<rabbitmq_username>
 RABBITMQ_PASSWORD=<rabbitmq_password>
 RABBITMQ_URL=amqp://<rabbitmq_username>:<rabbitmq_password>@rabbitmq:5672//
 REDIS_PASSWORD=<redis_password>
+REDIS_URL=redis://:<redis_password>@redis:6379/0
+INGESTION_INTERVAL=60
 EOF
 ```
 

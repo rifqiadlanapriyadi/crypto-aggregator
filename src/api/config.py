@@ -18,6 +18,7 @@ class Settings(pydantic_settings.BaseSettings):
     database_url: str
     rabbitmq_url: str
     redis_url: str
+    ingestion_interval: int
 
 
 settings = Settings()  # type: ignore[call-arg]
